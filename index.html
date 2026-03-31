@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Heavy Rotation — your personal Last.fm music listening dashboard" />
+  <title>Heavy Rotation 🎵</title>
+
+  <!-- Chart.js for data visualisation (bar + doughnut charts) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- App stylesheet -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- =====================================================================
+       HEADER
+       ===================================================================== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <span class="header-icon">🎵</span>
+        <div>
+          <h1 class="header-title">Heavy Rotation</h1>
+          <p class="header-subtitle">Your Last.fm Listening Dashboard</p>
+        </div>
+      </div>
+      <!-- User info badge shown after successful load -->
+      <div id="user-badge" class="user-badge hidden">
+        <img id="user-avatar" class="user-avatar" src="" alt="Avatar" />
+        <div class="user-info">
+          <span id="user-realname" class="user-realname"></span>
+          <span id="user-scrobbles" class="user-scrobbles"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       CONFIG PANEL
+       Users enter their Last.fm username and API key here.
+       Values are persisted to localStorage for convenience.
+       ===================================================================== -->
+  <section id="config-panel" class="config-panel">
+    <div class="config-inner">
+      <h2 class="config-title">Connect to Last.fm</h2>
+      <p class="config-desc">
+        Enter your Last.fm username and a free
+        <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener">API key</a>
+        to get started.
+      </p>
+      <div class="config-fields">
+        <div class="field-group">
+          <label for="input-username">Username</label>
+          <input
+            id="input-username"
+            type="text"
+            placeholder="e.g. rj"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <div class="field-group">
+          <label for="input-apikey">API Key</label>
+          <input
+            id="input-apikey"
+            type="password"
+            placeholder="32-character API key"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <button id="btn-load" class="btn-primary">Load My Stats</button>
+      </div>
+      <!-- Inline error message -->
+      <p id="config-error" class="config-error hidden"></p>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       MAIN DASHBOARD  (hidden until data is loaded)
+       ===================================================================== -->
+  <main id="dashboard" class="dashboard hidden">
+
+    <!-- ---- Period selector -------------------------------------------- -->
+    <div class="period-bar">
+      <span class="period-label">Show stats for:</span>
+      <div class="period-buttons" role="group" aria-label="Time period">
+        <button class="btn-period active" data-period="7day">7 Days</button>
+        <button class="btn-period" data-period="1month">1 Month</button>
+        <button class="btn-period" data-period="3month">3 Months</button>
+        <button class="btn-period" data-period="6month">6 Months</button>
+        <button class="btn-period" data-period="12month">12 Months</button>
+        <button class="btn-period" data-period="overall">All Time</button>
+      </div>
+    </div>
+
+    <!-- ---- Loading overlay --------------------------------------------- -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <p class="loading-text">Fetching your music data…</p>
+    </div>
+
+    <!-- ================================================================
+         TOP ARTISTS
+         ================================================================ -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2 class="section-title">🎤 Top Artists</h2>
+        <span id="artists-period-label" class="section-period"></span>
+      </div>
+      <div id="artists-grid" class="artists-grid">
+        <!-- Artist cards are injected here by app.js -->
+      </div>
+    </section>
+
+    <!-- ================================================================
+         TOP TRACKS
+         ================================================================ -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2 class="section-title">🎶 Top Tracks</h2>
+        <span id="tracks-period-label" class="section-period"></span>
+      </div>
+      <div id="tracks-list" class="tracks-list">
+        <!-- Track rows are injected here by app.js -->
+      </div>
+    </section>
+
+    <!-- ================================================================
+         CHARTS — bottom half of the page
+         ================================================================ -->
+    <section class="dashboard-section charts-section">
+      <h2 class="section-title">📊 Listening Analytics</h2>
+
+      <div class="charts-grid">
+        <!-- Daily listening activity (bar chart) -->
+        <div class="chart-card">
+          <h3 class="chart-title">Daily Scrobbles (Last 14 Days)</h3>
+          <div class="chart-wrapper">
+            <canvas id="chart-daily" aria-label="Daily scrobbles bar chart" role="img"></canvas>
+          </div>
+        </div>
+
+        <!-- Top genres / tags (doughnut chart) -->
+        <div class="chart-card">
+          <h3 class="chart-title">Top Genres</h3>
+          <div class="chart-wrapper">
+            <canvas id="chart-genres" aria-label="Top genres doughnut chart" role="img"></canvas>
+          </div>
+          <div id="genre-legend" class="genre-legend"></div>
+        </div>
+      </div>
+
+      <!-- Scrobble playback count summary bar -->
+      <div class="chart-card stats-card">
+        <h3 class="chart-title">Top 10 Artists — Playcount Comparison</h3>
+        <div class="chart-wrapper chart-wrapper--tall">
+          <canvas id="chart-artist-bar" aria-label="Artist playcount bar chart" role="img"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       FOOTER
+       ===================================================================== -->
+  <footer class="site-footer">
+    <p>
+      Powered by the
+      <a href="https://www.last.fm/api" target="_blank" rel="noopener">Last.fm API</a>
+      · Data belongs to you 🎧
+    </p>
+  </footer>
+
+  <!-- App modules — load order matters: api → charts → app -->
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
