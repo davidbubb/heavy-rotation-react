@@ -1,0 +1,718 @@
+/* ==========================================================================
+   HEAVY ROTATION — CSS
+   Dark-theme music listening dashboard.
+   Written in mobile-first, custom-property-driven CSS.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS Custom Properties (design tokens)
+   -------------------------------------------------------------------------- */
+:root {
+  /* Colour palette */
+  --clr-bg:            #0a0a12;   /* page background */
+  --clr-surface:       #12121e;   /* card / section background */
+  --clr-surface-2:     #1a1a2e;   /* slightly lighter surface */
+  --clr-border:        #2a2a40;   /* subtle border */
+  --clr-accent:        #e91e8c;   /* hot-pink accent (music energy) */
+  --clr-accent-dim:    #9c1260;   /* darker variant */
+  --clr-accent-2:      #7c3aed;   /* purple accent */
+  --clr-accent-3:      #06b6d4;   /* cyan accent */
+  --clr-text:          #e2e2f0;   /* primary text */
+  --clr-text-muted:    #7a7a9a;   /* secondary / muted text */
+  --clr-text-faint:    #3e3e58;   /* very faint (placeholders) */
+  --clr-rank:          #f59e0b;   /* rank badge amber */
+  --clr-success:       #10b981;
+  --clr-error:         #ef4444;
+
+  /* Gradients */
+  --gradient-hero: linear-gradient(135deg, #12121e 0%, #1a0a2e 50%, #0a1228 100%);
+  --gradient-card: linear-gradient(145deg, #1a1a2e 0%, #12121e 100%);
+  --gradient-accent: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-2) 100%);
+
+  /* Typography */
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', monospace;
+
+  /* Spacing scale */
+  --sp-1:  0.25rem;
+  --sp-2:  0.5rem;
+  --sp-3:  0.75rem;
+  --sp-4:  1rem;
+  --sp-6:  1.5rem;
+  --sp-8:  2rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+
+  /* Border radius */
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 24px rgba(233, 30, 140, 0.25);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset & base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  line-height: 1.6;
+  min-height: 100vh;
+  /* Subtle noise texture via SVG data URI */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%230a0a12'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23ffffff' opacity='0.015'/%3E%3C/svg%3E");
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--clr-accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--clr-text);
+}
+
+/* Utility */
+.hidden { display: none !important; }
+
+/* --------------------------------------------------------------------------
+   3. Site Header
+   -------------------------------------------------------------------------- */
+.site-header {
+  background: var(--gradient-hero);
+  border-bottom: 1px solid var(--clr-border);
+  padding: var(--sp-6) var(--sp-8);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.header-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  /* Subtle animation to feel alive */
+  animation: pulse-icon 3s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.header-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-subtitle {
+  font-size: 0.8rem;
+  color: var(--clr-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* User badge shown after data loads */
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-full);
+  padding: var(--sp-2) var(--sp-4);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--clr-accent);
+}
+
+.user-realname {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: block;
+}
+
+.user-scrobbles {
+  font-size: 0.75rem;
+  color: var(--clr-text-muted);
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   4. Config Panel
+   -------------------------------------------------------------------------- */
+.config-panel {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-16) var(--sp-8);
+  background: var(--gradient-hero);
+}
+
+.config-inner {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-12);
+  max-width: 520px;
+  width: 100%;
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.config-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--sp-2);
+}
+
+.config-desc {
+  color: var(--clr-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: var(--sp-8);
+  line-height: 1.7;
+}
+
+.config-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.field-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--clr-text-muted);
+}
+
+.field-group input {
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  padding: var(--sp-3) var(--sp-4);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+  width: 100%;
+}
+
+.field-group input::placeholder {
+  color: var(--clr-text-faint);
+}
+
+.field-group input:focus {
+  border-color: var(--clr-accent);
+  box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.15);
+}
+
+.btn-primary {
+  background: var(--gradient-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: var(--sp-3) var(--sp-6);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  width: 100%;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.config-error {
+  margin-top: var(--sp-4);
+  font-size: 0.875rem;
+  color: var(--clr-error);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+/* --------------------------------------------------------------------------
+   5. Dashboard layout
+   -------------------------------------------------------------------------- */
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-8) var(--sp-16);
+}
+
+/* Period selector bar */
+.period-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-8);
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.period-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--clr-text-muted);
+}
+
+.period-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.btn-period {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-full);
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: var(--sp-2) var(--sp-4);
+  transition: all var(--transition-fast);
+}
+
+.btn-period:hover {
+  border-color: var(--clr-accent);
+  color: var(--clr-text);
+}
+
+.btn-period.active {
+  background: var(--gradient-accent);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+
+/* Loading overlay inside dashboard */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 18, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-6);
+  z-index: 200;
+}
+
+.spinner {
+  width: 52px;
+  height: 52px;
+  border: 4px solid var(--clr-border);
+  border-top-color: var(--clr-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: var(--clr-text-muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   6. Dashboard sections
+   -------------------------------------------------------------------------- */
+.dashboard-section {
+  margin-bottom: var(--sp-12);
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.section-period {
+  font-size: 0.75rem;
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-full);
+  padding: 2px var(--sp-3);
+}
+
+/* --------------------------------------------------------------------------
+   7. Artist cards grid
+   -------------------------------------------------------------------------- */
+.artists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--sp-4);
+}
+
+.artist-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  position: relative;
+}
+
+.artist-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  border-color: var(--clr-accent);
+}
+
+/* Rank badge in top-left corner */
+.artist-rank {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: var(--radius-full);
+  color: var(--clr-rank);
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 3px 7px;
+  z-index: 1;
+}
+
+/* Artist image or fallback avatar */
+.artist-image-wrap {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  position: relative;
+  background: var(--clr-surface-2);
+}
+
+.artist-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-base);
+}
+
+.artist-card:hover .artist-img {
+  transform: scale(1.05);
+}
+
+/* Fallback: coloured avatar with initials when no image is available */
+.artist-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: rgba(255, 255, 255, 0.85);
+  /* Background is set inline per-artist for variety */
+}
+
+.artist-info {
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.artist-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist-plays {
+  font-size: 0.75rem;
+  color: var(--clr-text-muted);
+  margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   8. Tracks list
+   -------------------------------------------------------------------------- */
+.tracks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.track-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-4);
+  background: var(--gradient-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.track-row:hover {
+  border-color: var(--clr-accent);
+  transform: translateX(4px);
+}
+
+.track-rank {
+  color: var(--clr-text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.track-rank--top {
+  color: var(--clr-rank);
+}
+
+/* Small album art thumbnail */
+.track-art {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--clr-surface-2);
+  flex-shrink: 0;
+}
+
+.track-art-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--clr-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.track-meta {
+  min-width: 0; /* allows text overflow to work inside grid */
+}
+
+.track-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-artist {
+  font-size: 0.78rem;
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Play count badge on right side */
+.track-plays {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--clr-accent);
+  background: rgba(233, 30, 140, 0.12);
+  border-radius: var(--radius-full);
+  padding: 2px var(--sp-3);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   9. Charts section
+   -------------------------------------------------------------------------- */
+.charts-section {
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--clr-border);
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-6);
+}
+
+.chart-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-6);
+}
+
+.chart-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--sp-4);
+  color: var(--clr-text);
+}
+
+/* Fixed-height wrapper keeps charts from collapsing in flex/grid */
+.chart-wrapper {
+  position: relative;
+  height: 260px;
+}
+
+.chart-wrapper--tall {
+  height: 320px;
+}
+
+/* Custom genre legend below the doughnut chart */
+.genre-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--clr-text-muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Stats card spans full width */
+.stats-card {
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   10. Site Footer
+   -------------------------------------------------------------------------- */
+.site-footer {
+  border-top: 1px solid var(--clr-border);
+  padding: var(--sp-6) var(--sp-8);
+  text-align: center;
+  color: var(--clr-text-muted);
+  font-size: 0.8rem;
+}
+
+/* --------------------------------------------------------------------------
+   11. Responsive adjustments
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .site-header { padding: var(--sp-4) var(--sp-4); }
+  .header-title { font-size: 1.3rem; }
+
+  .config-panel  { padding: var(--sp-8) var(--sp-4); }
+  .config-inner  { padding: var(--sp-8); }
+
+  .dashboard { padding: var(--sp-4) var(--sp-4) var(--sp-12); }
+
+  .artists-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  .track-row {
+    grid-template-columns: auto auto 1fr;
+  }
+  /* Hide play count on very small screens to avoid overflow */
+  .track-plays { display: none; }
+}
+
+@media (max-width: 480px) {
+  .period-buttons { gap: var(--sp-1); }
+  .btn-period { padding: var(--sp-1) var(--sp-3); font-size: 0.75rem; }
+
+  .artists-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+}
