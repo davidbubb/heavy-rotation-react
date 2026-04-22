@@ -528,9 +528,7 @@ a:hover {
 
 /* Three-column row: Recent Tracks | Top Artists | Top Tracks */
 .top-sections-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--sp-6);
+  --bs-gutter-x: var(--sp-6);
   margin-bottom: var(--sp-12);
 }
 
@@ -763,9 +761,8 @@ a:hover {
 }
 
 .charts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--sp-6);
+  --bs-gutter-x: var(--sp-6);
+  --bs-gutter-y: var(--sp-6);
   margin-bottom: var(--sp-6);
 }
 
@@ -860,7 +857,7 @@ a:hover {
   }
 
   .top-sections-row {
-    grid-template-columns: 1fr;
+    --bs-gutter-x: 0;
   }
 
   .top-sections-row .dashboard-section:first-child {

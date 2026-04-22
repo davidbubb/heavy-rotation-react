@@ -1,6 +1,6 @@
 # Heavy Rotation 🎵
 
-A lightweight, client-side music listening dashboard powered by the [Last.fm API](https://www.last.fm/api). Drop it in a browser — no server, no build step, no framework required.
+A lightweight, client-side music listening dashboard powered by the [Last.fm API](https://www.last.fm/api). The UI is built with React (CDN runtime) and runs directly in the browser with no build step.
 
 ![dashboard preview](https://www.last.fm/static/images/lastfm_logo_light.png)
 
@@ -32,7 +32,7 @@ All data is fetched live from Last.fm every time you load the page (or switch ti
 
 ### 2. Open the dashboard
 
-Because the app is plain HTML/CSS/JS you can run it in several ways:
+Because the app is static HTML/CSS/JS with React loaded from CDNs, you can run it in several ways:
 
 ```bash
 # Option A — Python's built-in server (no install needed)
@@ -92,7 +92,7 @@ heavy-rotation/
 └── js/
     ├── api.js          # Last.fm API wrapper (fetch helper + public methods)
     ├── charts.js       # Chart.js rendering layer (bar, doughnut, horizontal bar)
-    └── app.js          # Main controller (state, events, rendering)
+    └── app.js          # React app (state, events, rendering)
 ```
 
 Scripts are loaded in dependency order at the bottom of `index.html`: `api.js` → `charts.js` → `app.js`.
@@ -101,13 +101,13 @@ Scripts are loaded in dependency order at the bottom of `index.html`: `api.js` �
 
 ## Design decisions
 
-### No framework, no build step
+### React with no build step
 
-The app is intentionally written in vanilla HTML, CSS, and JavaScript. This keeps the barrier to entry as low as possible — open the folder in a browser and it works. There are no `npm install` steps, no bundlers, and no transpilation. The only external dependency is Chart.js, loaded from a CDN.
+The app uses React 18 from a CDN (plus Babel Standalone for in-browser JSX transpilation) to keep component state and rendering predictable while still avoiding a Node build pipeline. There are no `npm install` steps, no bundlers, and no transpilation setup in the repository. External dependencies are loaded from CDNs: React, ReactDOM, Babel Standalone, Chart.js, and Bootstrap CSS.
 
-### IIFE module pattern
+### Component architecture
 
-Each JS file wraps its code in an [Immediately Invoked Function Expression](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) (`const X = (() => { … })()`). This gives each module a private scope — internal helpers are invisible outside the file — while still exposing a clean public interface through the returned object. A native ES module approach (`type="module"`) would have required a local server even for development, so IIFEs were chosen to preserve the "just open the file" experience.
+The main UI controller in `js/app.js` is implemented as a React component tree using hooks (`useState`, `useEffect`, `useMemo`). Data loading, theming, period switching, and list rendering are handled declaratively in React, while `js/api.js` and `js/charts.js` are reused for API access and Chart.js rendering.
 
 ### API key stored client-side
 
@@ -117,9 +117,9 @@ Because there is no backend, the Last.fm API key is held in `localStorage` and s
 
 Credentials are saved to `localStorage` under two fixed keys (`hv_username`, `hv_apikey`). On subsequent visits the form is pre-filled and the dashboard loads automatically, avoiding the need to re-enter credentials each time. Nothing beyond those two strings is persisted.
 
-### XSS protection via explicit escaping
+### XSS protection in rendering
 
-All user-supplied strings and API-returned data (artist names, track names, URLs) are passed through a minimal HTML-entity escaper (`escapeHtml`) before being written into `innerHTML`. Attributes such as `src` and `href` are also escaped via `escapeAttr`. Image error fallbacks use `textContent` and DOM APIs rather than `innerHTML` to avoid any chance of injecting markup. Inline `onerror` handlers are avoided for the same reason — error handling is attached via `addEventListener` after the HTML is set.
+React escapes text content by default, which removes the need for manual HTML string interpolation for names and labels. External links are still validated before rendering (`safeUrl`) so untrusted URL values do not become executable links.
 
 ### Parallel API requests
 
