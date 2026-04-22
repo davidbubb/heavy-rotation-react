@@ -17,6 +17,7 @@ const App = (() => {
   /** localStorage key names */
   const LS_USERNAME = 'hv_username';
   const LS_APIKEY   = 'hv_apikey';
+  const LS_THEME    = 'hv_theme';
 
   /**
    * Colours used for artist-avatar fallbacks.
@@ -43,6 +44,9 @@ const App = (() => {
     'overall':'All Time',
   };
 
+  /** Available visual themes. */
+  const THEMES = ['neon', 'sunset', 'mint', 'light'];
+
   // -------------------------------------------------------------------------
   // Application state
   // -------------------------------------------------------------------------
@@ -53,6 +57,8 @@ const App = (() => {
     period:      '7day',
     topArtists:  [],
     recentTracks: [],
+    genreTags:   [],
+    theme:       'neon',
   };
 
   // -------------------------------------------------------------------------
@@ -72,6 +78,7 @@ const App = (() => {
       loadingOverlay:    document.getElementById('loading-overlay'),
       artistsGrid:       document.getElementById('artists-grid'),
       tracksList:        document.getElementById('tracks-list'),
+      recentList:        document.getElementById('recent-list'),
       artistsPeriodLabel:document.getElementById('artists-period-label'),
       tracksPeriodLabel: document.getElementById('tracks-period-label'),
       periodButtons:     document.querySelectorAll('.btn-period'),
@@ -79,6 +86,7 @@ const App = (() => {
       userAvatar:        document.getElementById('user-avatar'),
       userRealname:      document.getElementById('user-realname'),
       userScrobbles:     document.getElementById('user-scrobbles'),
+      themeButtons:      document.querySelectorAll('.theme-btn'),
     };
   }
 
@@ -97,9 +105,11 @@ const App = (() => {
     // Restore previously saved credentials so the user doesn't have to retype
     const savedUsername = localStorage.getItem(LS_USERNAME) ?? '';
     const savedApiKey   = localStorage.getItem(LS_APIKEY)   ?? '';
+    const savedTheme    = localStorage.getItem(LS_THEME)    ?? 'neon';
 
     if (savedUsername) els.inputUsername.value = savedUsername;
     if (savedApiKey)   els.inputApiKey.value   = savedApiKey;
+    applyTheme(savedTheme, false);
 
     // Wire up events
     els.btnLoad.addEventListener('click', handleLoadClick);
@@ -112,6 +122,10 @@ const App = (() => {
 
     els.periodButtons.forEach(btn => {
       btn.addEventListener('click', () => handlePeriodChange(btn.dataset.period));
+    });
+
+    els.themeButtons.forEach(btn => {
+      btn.addEventListener('click', () => handleThemeChange(btn.dataset.theme));
     });
 
     // If credentials are already stored, load data automatically
@@ -167,6 +181,12 @@ const App = (() => {
     await loadTopData();
   }
 
+  /** Triggered when a theme button is clicked. */
+  function handleThemeChange(theme) {
+    applyTheme(theme, true);
+    rerenderCharts();
+  }
+
   // -------------------------------------------------------------------------
   // Data loading
   // -------------------------------------------------------------------------
@@ -183,8 +203,8 @@ const App = (() => {
       // Fetch user profile and top-level stats in parallel
       const [userInfo, artists, tracks] = await Promise.all([
         LastFmAPI.getUserInfo(state.username, state.apiKey),
-        LastFmAPI.getTopArtists(state.username, state.apiKey, state.period, 20),
-        LastFmAPI.getTopTracks(state.username, state.apiKey, state.period, 20),
+        LastFmAPI.getTopArtists(state.username, state.apiKey, state.period, 10),
+        LastFmAPI.getTopTracks(state.username, state.apiKey, state.period, 10),
       ]);
 
       // Fetch recent tracks for the daily chart (last 14 days)
@@ -202,11 +222,12 @@ const App = (() => {
       renderUserBadge(userInfo);
       renderArtists(artists);
       renderTracks(tracks);
+      renderRecentTracks(recentTracks.slice(0, 10));
       Charts.renderDailyChart(recentTracks);
       Charts.renderArtistBarChart(artists);
 
-      // Fetch genre tags concurrently for the top 10 artists
-      await loadAndRenderGenres(artists.slice(0, 10));
+      // Fetch genre tags concurrently for the top artists
+      await loadAndRenderGenres(artists);
 
       // Show the dashboard, hide the config panel
       showDashboard();
@@ -227,8 +248,8 @@ const App = (() => {
 
     try {
       const [artists, tracks] = await Promise.all([
-        LastFmAPI.getTopArtists(state.username, state.apiKey, state.period, 20),
-        LastFmAPI.getTopTracks(state.username, state.apiKey, state.period, 20),
+        LastFmAPI.getTopArtists(state.username, state.apiKey, state.period, 10),
+        LastFmAPI.getTopTracks(state.username, state.apiKey, state.period, 10),
       ]);
 
       state.topArtists = artists;
@@ -236,7 +257,7 @@ const App = (() => {
       renderArtists(artists);
       renderTracks(tracks);
       Charts.renderArtistBarChart(artists);
-      await loadAndRenderGenres(artists.slice(0, 10));
+      await loadAndRenderGenres(artists);
 
       // Period labels
       const periodLabel = PERIOD_LABELS[state.period] ?? state.period;
@@ -280,6 +301,37 @@ const App = (() => {
       .map(([name, count]) => ({ name, count }));
 
     Charts.renderGenreChart(sorted);
+    state.genreTags = sorted;
+  }
+
+  /** Re-render current chart data so visual tokens update immediately on theme switch. */
+  function rerenderCharts() {
+    if (state.recentTracks.length) {
+      Charts.renderDailyChart(state.recentTracks);
+    }
+    if (state.genreTags.length) {
+      Charts.renderGenreChart(state.genreTags);
+    }
+    if (state.topArtists.length) {
+      Charts.renderArtistBarChart(state.topArtists);
+    }
+  }
+
+  /** Apply a supported theme and persist if requested. */
+  function applyTheme(theme, persist) {
+    const nextTheme = THEMES.includes(theme) ? theme : 'neon';
+    state.theme = nextTheme;
+    document.documentElement.setAttribute('data-theme', nextTheme);
+
+    els.themeButtons.forEach(btn => {
+      const isActive = btn.dataset.theme === nextTheme;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+
+    if (persist) {
+      localStorage.setItem(LS_THEME, nextTheme);
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -345,7 +397,7 @@ const App = (() => {
 
       return `
         <a class="artist-card" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener"
-           title="${escapeAttr(name)}">
+           title="${escapeAttr(name)}" data-artist-name="${escapeAttr(name)}">
           <span class="artist-rank">#${rank}</span>
           <div class="artist-image-wrap">${imageContent}</div>
           <div class="artist-info">
@@ -368,6 +420,9 @@ const App = (() => {
         this.parentElement.replaceChild(fallback, this);
       });
     });
+
+    // Progressively enhance with iTunes artwork (fire-and-forget)
+    enrichArtistImages(artists);
   }
 
   /**
@@ -398,7 +453,8 @@ const App = (() => {
         : `<div class="track-art-fallback">🎵</div>`;
 
       return `
-        <a class="track-row" href="${escapeAttr(trackUrl)}" target="_blank" rel="noopener">
+        <a class="track-row" href="${escapeAttr(trackUrl)}" target="_blank" rel="noopener"
+           data-track-name="${escapeAttr(name)}" data-track-artist="${escapeAttr(artist)}">
           <span class="${rankClass}">${rank}</span>
           ${artContent}
           <div class="track-meta">
@@ -417,6 +473,142 @@ const App = (() => {
         fallback.textContent = '🎵';
         this.parentElement.replaceChild(fallback, this);
       });
+    });
+
+    // Progressively enhance with iTunes artwork (fire-and-forget)
+    enrichTrackImages(tracks);
+  }
+
+  /**
+   * Render the most recently scrobbled tracks.
+   * @param {Array} tracks  Recent track objects from getRecentTracks
+   */
+  function renderRecentTracks(tracks) {
+    if (!tracks.length) {
+      els.recentList.innerHTML = '<p class="empty-msg">No recent tracks found.</p>';
+      return;
+    }
+
+    els.recentList.innerHTML = tracks.map((track) => {
+      const name      = track.name ?? 'Unknown';
+      const artist    = track.artist?.['#text'] ?? track.artist?.name ?? 'Unknown Artist';
+      const imageUrl  = getBestImage(track.image);
+      const trackUrl  = track.url ?? '#';
+      const timeAgo   = formatRelativeTime(track.date?.uts);
+
+      const artContent = imageUrl
+        ? `<img class="track-art" src="${escapeAttr(imageUrl)}" alt="" loading="lazy">`
+        : `<div class="track-art-fallback">🎵</div>`;
+
+      return `
+        <a class="track-row track-row--recent" href="${escapeAttr(trackUrl)}" target="_blank" rel="noopener"
+           data-recent-name="${escapeAttr(name)}" data-recent-artist="${escapeAttr(artist)}">
+          ${artContent}
+          <div class="track-meta">
+            <p class="track-name">${escapeHtml(name)}</p>
+            <p class="track-artist">${escapeHtml(artist)}</p>
+          </div>
+          <span class="track-plays">${escapeHtml(timeAgo)}</span>
+        </a>`;
+    }).join('');
+
+    els.recentList.querySelectorAll('img.track-art').forEach(img => {
+      img.addEventListener('error', function handleRecentImgError() {
+        const fallback = document.createElement('div');
+        fallback.className = 'track-art-fallback';
+        fallback.textContent = '🎵';
+        this.parentElement.replaceChild(fallback, this);
+      });
+    });
+
+    enrichRecentTrackImages(tracks.slice(0, 10));
+  }
+
+  // -------------------------------------------------------------------------
+  // iTunes image enrichment — runs after initial render, swaps in real artwork
+  // progressively as responses arrive (fire-and-forget, non-blocking)
+  // -------------------------------------------------------------------------
+
+  function enrichArtistImages(artists) {
+    artists.forEach(async (artist) => {
+      const name = artist.name ?? '';
+      const url  = await ItunesAPI.getArtistArtwork(name);
+      if (!url) return;
+      const card = els.artistsGrid.querySelector(`[data-artist-name="${CSS.escape(name)}"]`);
+      if (!card) return;
+      const wrap = card.querySelector('.artist-image-wrap');
+      if (!wrap) return;
+      const colorPair = AVATAR_COLORS[name.length % AVATAR_COLORS.length];
+      const initials  = getInitials(name);
+      const img = document.createElement('img');
+      img.className        = 'artist-img';
+      img.alt              = name;
+      img.loading          = 'lazy';
+      img.dataset.color1   = colorPair[0];
+      img.dataset.color2   = colorPair[1];
+      img.dataset.initials = initials;
+      img.addEventListener('error', function() {
+        const fallback = document.createElement('div');
+        fallback.className = 'artist-avatar-fallback';
+        fallback.style.background = `linear-gradient(135deg,${this.dataset.color1},${this.dataset.color2})`;
+        fallback.textContent = this.dataset.initials;
+        this.parentElement.replaceChild(fallback, this);
+      });
+      img.src = url;
+      wrap.innerHTML = '';
+      wrap.appendChild(img);
+    });
+  }
+
+  function enrichTrackImages(tracks) {
+    tracks.forEach(async (track) => {
+      const name   = track.name ?? '';
+      const artist = track.artist?.name ?? track.artist?.['#text'] ?? '';
+      const url    = await ItunesAPI.getTrackArtwork(name, artist);
+      if (!url) return;
+      const selector = `[data-track-name="${CSS.escape(name)}"][data-track-artist="${CSS.escape(artist)}"]`;
+      const row = els.tracksList.querySelector(selector);
+      if (!row) return;
+      const existing = row.querySelector('.track-art, .track-art-fallback');
+      if (!existing) return;
+      const img = document.createElement('img');
+      img.className = 'track-art';
+      img.alt       = '';
+      img.loading   = 'lazy';
+      img.addEventListener('error', function() {
+        const fallback = document.createElement('div');
+        fallback.className = 'track-art-fallback';
+        fallback.textContent = '🎵';
+        this.parentElement.replaceWith(fallback);
+      });
+      img.src = url;
+      existing.replaceWith(img);
+    });
+  }
+
+  function enrichRecentTrackImages(tracks) {
+    tracks.forEach(async (track) => {
+      const name   = track.name ?? '';
+      const artist = track.artist?.['#text'] ?? track.artist?.name ?? '';
+      const url    = await ItunesAPI.getTrackArtwork(name, artist);
+      if (!url) return;
+      const selector = `[data-recent-name="${CSS.escape(name)}"][data-recent-artist="${CSS.escape(artist)}"]`;
+      const row = els.recentList.querySelector(selector);
+      if (!row) return;
+      const existing = row.querySelector('.track-art-fallback');
+      if (!existing) return;
+      const img = document.createElement('img');
+      img.className = 'track-art';
+      img.alt       = '';
+      img.loading   = 'lazy';
+      img.addEventListener('error', function() {
+        const fallback = document.createElement('div');
+        fallback.className = 'track-art-fallback';
+        fallback.textContent = '🎵';
+        this.parentElement.replaceWith(fallback);
+      });
+      img.src = url;
+      existing.replaceWith(img);
     });
   }
 
@@ -487,6 +679,34 @@ const App = (() => {
    */
   function normaliseTag(tag) {
     return tag.toLowerCase().trim();
+  }
+
+  /**
+   * Format a UNIX timestamp as a human-readable relative time string.
+   * @param {string|number|undefined} uts  UNIX timestamp in seconds
+   * @returns {string}
+   */
+  function formatRelativeTime(uts) {
+    if (!uts) return '';
+    const diff = Math.floor(Date.now() / 1000) - parseInt(uts, 10);
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  /**
+   * Format a UNIX timestamp as a human-readable relative time string.
+   * @param {string|number|undefined} uts  UNIX timestamp in seconds
+   * @returns {string}
+   */
+  function formatRelativeTime(uts) {
+    if (!uts) return '';
+    const diff = Math.floor(Date.now() / 1000) - parseInt(uts, 10);
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
   }
 
   /**

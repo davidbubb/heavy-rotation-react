@@ -177,3 +177,117 @@ const LastFmAPI = (() => {
     getArtistTopTags,
   };
 })();
+
+/* ==========================================================================
+   iTunes Search API — used to fetch artwork since Last.fm removed images.
+   No API key required; CORS is open on the Apple endpoint.
+   ========================================================================== */
+const ItunesAPI = (() => {
+  const BASE_URL = 'https://itunes.apple.com/search';
+
+  /**
+   * JSONP helper for iTunes search endpoint.
+   * iTunes does not expose permissive CORS headers for fetch(), so we use
+   * callback-based loading via script tag instead.
+   *
+   * @param {Object} params
+   * @returns {Promise<Object>}
+   */
+  function searchJsonp(params) {
+    return new Promise((resolve, reject) => {
+      const callbackName = `itunes_cb_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const url = new URL(BASE_URL);
+
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null && value !== '') {
+          url.searchParams.set(key, value);
+        }
+      }
+      url.searchParams.set('callback', callbackName);
+
+      let completed = false;
+      const script = document.createElement('script');
+
+      function cleanup() {
+        delete window[callbackName];
+        script.remove();
+      }
+
+      const timeoutId = setTimeout(() => {
+        if (completed) return;
+        completed = true;
+        cleanup();
+        reject(new Error('iTunes request timed out'));
+      }, 6000);
+
+      window[callbackName] = (data) => {
+        if (completed) return;
+        completed = true;
+        clearTimeout(timeoutId);
+        cleanup();
+        resolve(data || {});
+      };
+
+      script.onerror = () => {
+        if (completed) return;
+        completed = true;
+        clearTimeout(timeoutId);
+        cleanup();
+        reject(new Error('iTunes JSONP load failed'));
+      };
+
+      script.src = url.toString();
+      document.head.appendChild(script);
+    });
+  }
+
+  /**
+   * Upgrade a 100×100 iTunes artwork URL to 600×600.
+   * @param {string} url
+   * @returns {string}
+   */
+  function upgradeArtworkSize(url) {
+    return url.replace('100x100bb', '600x600bb');
+  }
+
+  /**
+   * Fetch album artwork for a specific track.
+   * @param {string} trackName
+   * @param {string} artistName
+   * @returns {Promise<string>} artwork URL or empty string
+   */
+  async function getTrackArtwork(trackName, artistName) {
+    try {
+      const data = await searchJsonp({
+        term: `${artistName} ${trackName}`,
+        entity: 'song',
+        limit: '1',
+      });
+      const art = data.results?.[0]?.artworkUrl100;
+      return art ? upgradeArtworkSize(art) : '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Fetch an artwork image for an artist (uses their top song's album art).
+   * @param {string} artistName
+   * @returns {Promise<string>} artwork URL or empty string
+   */
+  async function getArtistArtwork(artistName) {
+    try {
+      const data = await searchJsonp({
+        term: artistName,
+        entity: 'song',
+        limit: '1',
+      });
+      const art = data.results?.[0]?.artworkUrl100;
+      return art ? upgradeArtworkSize(art) : '';
+    } catch {
+      return '';
+    }
+  }
+
+  return { getTrackArtwork, getArtistArtwork };
+})();

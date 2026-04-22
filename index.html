@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Heavy Rotation — your personal Last.fm music listening dashboard" />
   <title>Heavy Rotation 🎵</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
   <!-- Chart.js for data visualisation (bar + doughnut charts) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -26,12 +27,20 @@
           <p class="header-subtitle">Your Last.fm Listening Dashboard</p>
         </div>
       </div>
-      <!-- User info badge shown after successful load -->
-      <div id="user-badge" class="user-badge hidden">
-        <img id="user-avatar" class="user-avatar" src="" alt="Avatar" />
-        <div class="user-info">
-          <span id="user-realname" class="user-realname"></span>
-          <span id="user-scrobbles" class="user-scrobbles"></span>
+      <div class="header-controls">
+        <div class="theme-switcher" role="group" aria-label="Theme selector">
+          <button class="theme-btn active" data-theme="neon" aria-pressed="true">Neon</button>
+          <button class="theme-btn" data-theme="sunset" aria-pressed="false">Sunset</button>
+          <button class="theme-btn" data-theme="mint" aria-pressed="false">Mint</button>
+          <button class="theme-btn" data-theme="light" aria-pressed="false">Light</button>
+        </div>
+        <!-- User info badge shown after successful load -->
+        <div id="user-badge" class="user-badge hidden">
+          <img id="user-avatar" class="user-avatar" src="" alt="Avatar" style="display: none;" />
+          <div class="user-info">
+            <span id="user-realname" class="user-realname" style="display: none;"></span>
+            <span id="user-scrobbles" class="user-scrobbles"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -103,30 +112,40 @@
     </div>
 
     <!-- ================================================================
-         TOP ARTISTS
+         RECENT TRACKS + TOP ARTISTS + TOP TRACKS  (three columns)
          ================================================================ -->
-    <section class="dashboard-section">
-      <div class="section-header">
-        <h2 class="section-title">🎤 Top Artists</h2>
-        <span id="artists-period-label" class="section-period"></span>
-      </div>
-      <div id="artists-grid" class="artists-grid">
-        <!-- Artist cards are injected here by app.js -->
-      </div>
-    </section>
+    <div class="top-sections-row">
 
-    <!-- ================================================================
-         TOP TRACKS
-         ================================================================ -->
-    <section class="dashboard-section">
-      <div class="section-header">
-        <h2 class="section-title">🎶 Top Tracks</h2>
-        <span id="tracks-period-label" class="section-period"></span>
-      </div>
-      <div id="tracks-list" class="tracks-list">
-        <!-- Track rows are injected here by app.js -->
-      </div>
-    </section>
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2 class="section-title">🕓 Recent Tracks</h2>
+        </div>
+        <div id="recent-list" class="tracks-list">
+          <!-- Recent track rows are injected here by app.js -->
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2 class="section-title">🎤 Top Artists</h2>
+          <span id="artists-period-label" class="section-period"></span>
+        </div>
+        <div id="artists-grid" class="artists-grid">
+          <!-- Artist cards are injected here by app.js -->
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2 class="section-title">🎶 Top Tracks</h2>
+          <span id="tracks-period-label" class="section-period"></span>
+        </div>
+        <div id="tracks-list" class="tracks-list">
+          <!-- Track rows are injected here by app.js -->
+        </div>
+      </section>
+
+    </div>
 
     <!-- ================================================================
          CHARTS — bottom half of the page

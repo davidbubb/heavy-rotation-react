@@ -58,6 +58,79 @@
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
+
+  /* Chart tokens (read by charts.js) */
+  --chart-grid-color: rgba(255, 255, 255, 0.06);
+  --chart-text-color: var(--clr-text-muted);
+}
+
+/* Theme: Sunset (warm dark) */
+:root[data-theme="sunset"] {
+  --clr-bg:            #1d0f0b;
+  --clr-surface:       #2a1712;
+  --clr-surface-2:     #3b221c;
+  --clr-border:        #5a3528;
+  --clr-accent:        #ff6b35;
+  --clr-accent-dim:    #b6491f;
+  --clr-accent-2:      #ff9f1c;
+  --clr-accent-3:      #ffd166;
+  --clr-text:          #ffe7dc;
+  --clr-text-muted:    #d0a896;
+  --clr-text-faint:    #87665a;
+  --clr-rank:          #ffd166;
+  --gradient-hero: linear-gradient(135deg, #2a1712 0%, #4a2119 45%, #703226 100%);
+  --gradient-card: linear-gradient(145deg, #3b221c 0%, #2a1712 100%);
+  --gradient-accent: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-2) 100%);
+  --shadow-glow: 0 0 24px rgba(255, 107, 53, 0.28);
+  --chart-grid-color: rgba(255, 232, 220, 0.13);
+  --chart-text-color: #f1cdbd;
+}
+
+/* Theme: Mint (fresh dark) */
+:root[data-theme="mint"] {
+  --clr-bg:            #071513;
+  --clr-surface:       #0f2220;
+  --clr-surface-2:     #13302d;
+  --clr-border:        #24514c;
+  --clr-accent:        #3ddc97;
+  --clr-accent-dim:    #1f8f63;
+  --clr-accent-2:      #22d3ee;
+  --clr-accent-3:      #a7f3d0;
+  --clr-text:          #dcfaf0;
+  --clr-text-muted:    #8ec9b6;
+  --clr-text-faint:    #4a7f71;
+  --clr-rank:          #a7f3d0;
+  --gradient-hero: linear-gradient(135deg, #0f2220 0%, #12322f 45%, #1a4a46 100%);
+  --gradient-card: linear-gradient(145deg, #13302d 0%, #0f2220 100%);
+  --gradient-accent: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-2) 100%);
+  --shadow-glow: 0 0 24px rgba(61, 220, 151, 0.26);
+  --chart-grid-color: rgba(220, 250, 240, 0.12);
+  --chart-text-color: #b4e5d6;
+}
+
+/* Theme: Light (clean daytime mode) */
+:root[data-theme="light"] {
+  --clr-bg:            #f4f6fb;
+  --clr-surface:       #ffffff;
+  --clr-surface-2:     #edf1f9;
+  --clr-border:        #d8deec;
+  --clr-accent:        #2563eb;
+  --clr-accent-dim:    #1e40af;
+  --clr-accent-2:      #0ea5e9;
+  --clr-accent-3:      #06b6d4;
+  --clr-text:          #172033;
+  --clr-text-muted:    #5c6b85;
+  --clr-text-faint:    #8e9ab0;
+  --clr-rank:          #d97706;
+  --gradient-hero: linear-gradient(135deg, #f8fbff 0%, #e8f0ff 50%, #e4f9ff 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f5f8ff 100%);
+  --gradient-accent: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-2) 100%);
+  --shadow-sm:  0 1px 2px rgba(16, 24, 40, 0.08);
+  --shadow-md:  0 6px 20px rgba(16, 24, 40, 0.12);
+  --shadow-lg:  0 12px 32px rgba(16, 24, 40, 0.14);
+  --shadow-glow: 0 0 24px rgba(37, 99, 235, 0.16);
+  --chart-grid-color: rgba(23, 32, 51, 0.12);
+  --chart-text-color: #5c6b85;
 }
 
 /* --------------------------------------------------------------------------
@@ -82,6 +155,12 @@ body {
   min-height: 100vh;
   /* Subtle noise texture via SVG data URI */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%230a0a12'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23ffffff' opacity='0.015'/%3E%3C/svg%3E");
+}
+
+/* Light theme uses a bright paper-like grain instead of dark texture. */
+:root[data-theme="light"] body {
+  background-color: var(--clr-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Crect width='6' height='6' fill='%23f4f6fb'/%3E%3Ccircle cx='1' cy='1' r='0.45' fill='%23000000' opacity='0.04'/%3E%3Ccircle cx='4' cy='3' r='0.35' fill='%23000000' opacity='0.03'/%3E%3C/svg%3E");
 }
 
 img {
@@ -129,6 +208,50 @@ a:hover {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-full);
+  padding: 4px;
+}
+
+.theme-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 6px 10px;
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+}
+
+.theme-btn:hover {
+  color: var(--clr-text);
+}
+
+.theme-btn.active {
+  background: var(--gradient-accent);
+  border-color: transparent;
+  box-shadow: var(--shadow-glow);
+  color: #fff;
 }
 
 .header-icon {
@@ -315,9 +438,11 @@ a:hover {
 .period-bar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--sp-4);
   margin-bottom: var(--sp-8);
+  margin-left: calc((100% + var(--sp-6)) / 3);
   padding: var(--sp-4) 0;
   border-bottom: 1px solid var(--clr-border);
 }
@@ -399,6 +524,23 @@ a:hover {
    -------------------------------------------------------------------------- */
 .dashboard-section {
   margin-bottom: var(--sp-12);
+}
+
+/* Three-column row: Recent Tracks | Top Artists | Top Tracks */
+.top-sections-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-12);
+}
+
+.top-sections-row .dashboard-section {
+  margin-bottom: 0;
+}
+
+/* Tighter artist grid inside the narrower third-width column */
+.top-sections-row .artists-grid {
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
 }
 
 .section-header {
@@ -596,6 +738,11 @@ a:hover {
   text-overflow: ellipsis;
 }
 
+/* Recent tracks rows have no rank badge — use 3-column grid instead of 4 */
+.track-row--recent {
+  grid-template-columns: auto 1fr auto;
+}
+
 /* Play count badge on right side */
 .track-plays {
   font-size: 0.8rem;
@@ -691,11 +838,34 @@ a:hover {
 @media (max-width: 768px) {
   .site-header { padding: var(--sp-4) var(--sp-4); }
   .header-title { font-size: 1.3rem; }
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .theme-switcher {
+    order: 2;
+  }
+  .user-badge {
+    order: 1;
+  }
 
   .config-panel  { padding: var(--sp-8) var(--sp-4); }
   .config-inner  { padding: var(--sp-8); }
 
   .dashboard { padding: var(--sp-4) var(--sp-4) var(--sp-12); }
+
+  .period-bar {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .top-sections-row {
+    grid-template-columns: 1fr;
+  }
+
+  .top-sections-row .dashboard-section:first-child {
+    margin-bottom: var(--sp-8);
+  }
 
   .artists-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -709,6 +879,16 @@ a:hover {
 }
 
 @media (max-width: 480px) {
+  .theme-switcher {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .theme-btn {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+  }
+
   .period-buttons { gap: var(--sp-1); }
   .btn-period { padding: var(--sp-1) var(--sp-3); font-size: 0.75rem; }
 

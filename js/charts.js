@@ -15,24 +15,6 @@ const Charts = (() => {
   // Design tokens — keep in sync with CSS custom properties
   // -------------------------------------------------------------------------
 
-  /** Palette for genre segments and other multi-colour uses. */
-  const PALETTE = [
-    '#e91e8c', // pink
-    '#7c3aed', // purple
-    '#06b6d4', // cyan
-    '#f59e0b', // amber
-    '#10b981', // emerald
-    '#ef4444', // red
-    '#3b82f6', // blue
-    '#ec4899', // rose
-    '#8b5cf6', // violet
-    '#14b8a6', // teal
-    '#f97316', // orange
-    '#84cc16', // lime
-  ];
-
-  const GRID_COLOR  = 'rgba(255, 255, 255, 0.06)';
-  const TEXT_COLOR  = '#7a7a9a';
   const FONT_FAMILY = "'Segoe UI', system-ui, sans-serif";
 
   // References to active Chart.js instances — kept so we can destroy them
@@ -49,11 +31,46 @@ const Charts = (() => {
    * Called once by app.js at startup.
    */
   function init() {
-    Chart.defaults.color            = TEXT_COLOR;
+    const tokens = getThemeTokens();
+    Chart.defaults.color            = tokens.textColor;
     Chart.defaults.font.family      = FONT_FAMILY;
     Chart.defaults.font.size        = 12;
     Chart.defaults.plugins.legend.display = false; // we render our own legends
     Chart.defaults.animation.duration = 600;
+  }
+
+  function getCssVar(name, fallback) {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+  }
+
+  function getThemeTokens() {
+    const accent = getCssVar('--clr-accent', '#e91e8c');
+    const accent2 = getCssVar('--clr-accent-2', '#7c3aed');
+    const accent3 = getCssVar('--clr-accent-3', '#06b6d4');
+
+    return {
+      accent,
+      accent2,
+      accent3,
+      surface: getCssVar('--clr-surface', '#12121e'),
+      gridColor: getCssVar('--chart-grid-color', 'rgba(255, 255, 255, 0.06)'),
+      textColor: getCssVar('--chart-text-color', '#7a7a9a'),
+      palette: [
+        accent,
+        accent2,
+        accent3,
+        '#f59e0b',
+        '#10b981',
+        '#ef4444',
+        '#3b82f6',
+        '#ec4899',
+        '#8b5cf6',
+        '#14b8a6',
+        '#f97316',
+        '#84cc16',
+      ],
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -74,6 +91,8 @@ const Charts = (() => {
    */
   function renderDailyChart(tracks) {
     destroyChart(dailyChartInstance);
+    const tokens = getThemeTokens();
+    Chart.defaults.color = tokens.textColor;
 
     const canvas = document.getElementById('chart-daily');
     if (!canvas) return;
@@ -87,8 +106,8 @@ const Charts = (() => {
     // Gradient fill — looks great on dark background
     const ctx = canvas.getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-    gradient.addColorStop(0,   'rgba(233, 30, 140, 0.8)');
-    gradient.addColorStop(1,   'rgba(233, 30, 140, 0.05)');
+    gradient.addColorStop(0,   `${tokens.accent}cc`);
+    gradient.addColorStop(1,   `${tokens.accent}14`);
 
     dailyChartInstance = new Chart(ctx, {
       type: 'bar',
@@ -98,7 +117,7 @@ const Charts = (() => {
           label: 'Scrobbles',
           data: values,
           backgroundColor: gradient,
-          borderColor: '#e91e8c',
+          borderColor: tokens.accent,
           borderWidth: 1,
           borderRadius: 4,
           borderSkipped: false,
@@ -116,11 +135,11 @@ const Charts = (() => {
         },
         scales: {
           x: {
-            grid: { color: GRID_COLOR },
+            grid: { color: tokens.gridColor },
             ticks: { maxRotation: 45 },
           },
           y: {
-            grid: { color: GRID_COLOR },
+            grid: { color: tokens.gridColor },
             beginAtZero: true,
             ticks: {
               // Only show whole numbers
@@ -184,6 +203,8 @@ const Charts = (() => {
    */
   function renderGenreChart(aggregatedTags) {
     destroyChart(genreChartInstance);
+    const tokens = getThemeTokens();
+    Chart.defaults.color = tokens.textColor;
 
     const canvas = document.getElementById('chart-genres');
     const legendEl = document.getElementById('genre-legend');
@@ -193,7 +214,7 @@ const Charts = (() => {
     const top = aggregatedTags.slice(0, 10);
     const labels = top.map(t => t.name);
     const values = top.map(t => t.count);
-    const colors = PALETTE.slice(0, top.length);
+    const colors = tokens.palette.slice(0, top.length);
 
     genreChartInstance = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
@@ -202,7 +223,7 @@ const Charts = (() => {
         datasets: [{
           data: values,
           backgroundColor: colors,
-          borderColor: '#12121e',
+          borderColor: tokens.surface,
           borderWidth: 2,
           hoverOffset: 8,
         }],
@@ -244,6 +265,8 @@ const Charts = (() => {
    */
   function renderArtistBarChart(artists) {
     destroyChart(artistBarChartInstance);
+    const tokens = getThemeTokens();
+    Chart.defaults.color = tokens.textColor;
 
     const canvas = document.getElementById('chart-artist-bar');
     if (!canvas) return;
@@ -254,11 +277,6 @@ const Charts = (() => {
 
     const ctx = canvas.getContext('2d');
 
-    // Gradient from accent pink to purple for visual interest
-    const gradient = ctx.createLinearGradient(0, 0, canvas.offsetWidth || 800, 0);
-    gradient.addColorStop(0,   '#e91e8c');
-    gradient.addColorStop(1,   '#7c3aed');
-
     artistBarChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -266,7 +284,7 @@ const Charts = (() => {
         datasets: [{
           label: 'Play count',
           data: values,
-          backgroundColor: PALETTE.slice(0, top.length),
+          backgroundColor: tokens.palette.slice(0, top.length),
           borderRadius: 4,
           borderSkipped: false,
         }],
@@ -284,14 +302,14 @@ const Charts = (() => {
         },
         scales: {
           x: {
-            grid: { color: GRID_COLOR },
+            grid: { color: tokens.gridColor },
             beginAtZero: true,
             ticks: {
               callback: val => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val,
             },
           },
           y: {
-            grid: { color: GRID_COLOR },
+            grid: { color: tokens.gridColor },
           },
         },
       },
