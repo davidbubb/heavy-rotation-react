@@ -303,11 +303,11 @@ export default function App() {
 
             {hasLoaded && (
               <div id="user-badge" className="user-badge align-items-center">
-                {badge.avatarUrl ? (
+                {/*{badge.avatarUrl ? (
                   <img id="user-avatar" className="user-avatar" src={badge.avatarUrl} alt="Avatar" />
-                ) : null}
+                ) : null}*/}
                 <div className="user-info">
-                  <span id="user-realname" className="user-realname">{badge.realName}</span>
+                  {/* <span id="user-realname" className="user-realname">{badge.realName}</span> */}
                   <span id="user-scrobbles" className="user-scrobbles">{badge.scrobblesText}</span>
                 </div>
               </div>
